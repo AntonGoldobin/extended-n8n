@@ -15,7 +15,7 @@ RUN apk update && apk add --no-cache \
     pkgconf \
     libsndfile \
     ffmpeg \
-    llvm18-dev \
+    llvm16-dev \
     && rm -rf /var/cache/apk/*
 
 # Создаём виртуальную среду
@@ -51,7 +51,7 @@ RUN apk update && apk add --no-cache \
     libsndfile \
     ffmpeg \
     tzdata \
-    llvm18 \
+    llvm16 \
     && rm -rf /var/cache/apk/*
 
 # Копируем виртуальную среду
