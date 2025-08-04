@@ -1,4 +1,3 @@
-dockerfile# Этап 1: Сборка зависимостей
 FROM docker.n8n.io/n8nio/n8n:1.3.1 AS builder
 
 # Переключаемся на root для установки пакетов
