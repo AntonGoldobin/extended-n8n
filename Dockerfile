@@ -15,15 +15,24 @@ RUN apk update && apk add --no-cache \
     git \
     build-base \
     tzdata \
+    pkgconf \
+    python3-dev \
+    musl-dev \
+    linux-headers \
+    libsndfile \
     && rm -rf /var/cache/apk/*
 
 # Создаём виртуальную среду для Python
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Обновляем pip в виртуальной среде
+RUN pip install --no-cache-dir --upgrade pip
+
 # Устанавливаем Python-библиотеки в виртуальной среде
 RUN pip install --no-cache-dir \
     numpy \
+    scikit-learn \
     librosa
 
 # Устанавливаем дополнительные NPM-пакеты
