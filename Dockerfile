@@ -9,7 +9,7 @@ RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
     build-base \
-    python3-dev/Platforms/Grok/Conversation.cs
+    python3-dev \
     musl-dev \
     linux-headers \
     pkgconf \
