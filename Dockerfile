@@ -15,6 +15,7 @@ RUN apk update && apk add --no-cache \
     pkgconf \
     libsndfile \
     ffmpeg \
+    llvm18-dev \
     && rm -rf /var/cache/apk/*
 
 # Создаём виртуальную среду
@@ -24,11 +25,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Обновляем pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Устанавливаем Python-библиотеки (без numba)
+# Устанавливаем Python-библиотеки
 RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir llvmlite
+RUN pip install --no-cache-dir numba
 RUN pip install --no-cache-dir scikit-learn
-RUN pip install --no-cache-dir --no-deps librosa
-RUN pip install --no-cache-dir audioread soundfile resampy
+RUN pip install --no-cache-dir librosa
 
 # Устанавливаем npm-пакеты глобально
 RUN npm install -g \
@@ -37,7 +39,7 @@ RUN npm install -g \
     @qdrant/js-client-rest \
     @langchain/community
 
-# Этап 2: Итоговый минималистичный образ
+# Этап 2: Итоговый образ
 FROM docker.n8n.io/n8nio/n8n:1.3.1
 
 # Переключаемся на root для настройки
@@ -49,6 +51,7 @@ RUN apk update && apk add --no-cache \
     libsndfile \
     ffmpeg \
     tzdata \
+    llvm18 \
     && rm -rf /var/cache/apk/*
 
 # Копируем виртуальную среду
