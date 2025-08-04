@@ -1,14 +1,15 @@
-FROM docker.n8n.io/n8nio/n8n:latest AS builder
+# Этап 1: Сборка зависимостей
+FROM docker.n8n.io/n8nio/n8n:1.3.1 AS builder
 
 # Переключаемся на root для установки пакетов
 USER root
 
-# Обновляем пакеты и устанавливаем зависимости для компиляции
+# Устанавливаем зависимости для компиляции
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
     build-base \
-    python3-dev \
+    python3-dev/Platforms/Grok/Conversation.cs
     musl-dev \
     linux-headers \
     pkgconf \
@@ -37,7 +38,7 @@ RUN npm install -g \
     @langchain/community
 
 # Этап 2: Итоговый минималистичный образ
-FROM docker.n8n.io/n8nio/n8n:latest
+FROM docker.n8n.io/n8nio/n8n:1.3.1
 
 # Переключаемся на root для настройки
 USER root
@@ -50,7 +51,7 @@ RUN apk update && apk add --no-cache \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-# Копируем виртуальную среду из builder
+# Копируем виртуальную среду
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
