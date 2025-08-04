@@ -59,9 +59,9 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Копируем глобальные npm-пакеты
-COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules
-COPY --from=builder /usr/bin/fluent-ffmpeg /usr/bin/fluent-ffmpeg
-COPY --from=builder /usr/bin/tsc /usr/bin/tsc
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=builder /usr/local/bin/fluent-ffmpeg /usr/local/bin/fluent-ffmpeg
+COPY --from=builder /usr/local/bin/tsc /usr/local/bin/tsc
 
 # Создаём группу docker и добавляем пользователя node
 RUN addgroup -S docker || true \
