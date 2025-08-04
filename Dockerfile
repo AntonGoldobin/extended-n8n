@@ -4,7 +4,7 @@ FROM docker.n8n.io/n8nio/n8n:latest
 # Переключаемся на root для установки пакетов
 USER root
 
-# Обновляем пакеты и устанавливаем зависимости (используем apk вместо apt-get)
+# Обновляем пакеты и устанавливаем зависимости
 RUN apk update && apk add --no-cache \
     ffmpeg \
     python3 \
@@ -17,8 +17,12 @@ RUN apk update && apk add --no-cache \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-# Устанавливаем Python-библиотеки
-RUN pip3 install --no-cache-dir \
+# Создаём виртуальную среду для Python
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Устанавливаем Python-библиотеки в виртуальной среде
+RUN pip install --no-cache-dir \
     numpy \
     librosa
 
@@ -29,7 +33,7 @@ RUN npm install -g \
     @qdrant/js-client-rest \
     @langchain/community
 
-# Создаем группу docker, если она не существует, и добавляем пользователя node
+# Создаём группу docker, если она не существует, и добавляем пользователя node
 RUN addgroup -S docker || true \
     && addgroup node docker
 
