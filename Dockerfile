@@ -1,10 +1,10 @@
-# Stage 1: Build dependencies
+# Этап 1: Сборка зависимостей
 FROM docker.n8n.io/n8nio/n8n:1.3.1 AS builder
 
-# Switch to root for package installation
+# Переключаемся на root для установки пакетов
 USER root
 
-# Install build dependencies
+# Устанавливаем зависимости для компиляции
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
@@ -15,65 +15,68 @@ RUN apk update && apk add --no-cache \
     pkgconf \
     libsndfile \
     ffmpeg \
+    llvm16-dev \
     && rm -rf /var/cache/apk/*
 
-# Create virtual environment
+# Создаём виртуальную среду
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Upgrade pip
+# Обновляем pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Install Python packages (without numba)
+# Устанавливаем Python-библиотеки
 RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir llvmlite
+RUN pip install --no-cache-dir numba
 RUN pip install --no-cache-dir scikit-learn
-RUN pip install --no-cache-dir --no-deps librosa
-RUN pip install --no-cache-dir audioread soundfile resampy
+RUN pip install --no-cache-dir librosa
 
-# Install global npm packages
+# Устанавливаем npm-пакеты глобально
 RUN npm install -g \
     fluent-ffmpeg \
     typescript \
     @qdrant/js-client-rest \
     @langchain/community
 
-# Stage 2: Final minimal image
+# Этап 2: Итоговый образ
 FROM docker.n8n.io/n8nio/n8n:1.3.1
 
-# Switch to root for setup
+# Переключаемся на root для настройки
 USER root
 
-# Install minimal runtime dependencies
+# Устанавливаем минимальные runtime-зависимости
 RUN apk update && apk add --no-cache \
     python3 \
     libsndfile \
     ffmpeg \
     tzdata \
+    llvm16 \
     && rm -rf /var/cache/apk/*
 
-# Copy virtual environment
+# Копируем виртуальную среду
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy global npm packages
-COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=builder /usr/local/bin/fluent-ffmpeg /usr/local/bin/fluent-ffmpeg
-COPY --from=builder /usr/local/bin/tsc /usr/local/bin/tsc
+# Копируем глобальные npm-пакеты
+COPY --from=builder /usr/lib/node_modules /usr/lib/node_modules
+COPY --from=builder /usr/bin/fluent-ffmpeg /usr/bin/fluent-ffmpeg
+COPY --from=builder /usr/bin/tsc /usr/bin/tsc
 
-# Create docker group and add node user
+# Создаём группу docker и добавляем пользователя node
 RUN addgroup -S docker || true \
     && addgroup node docker
 
-# Set permissions for n8n data folder
+# Настраиваем права для папки данных n8n
 RUN chown -R node:node /home/node/.n8n \
     && chmod -R 755 /home/node/.n8n
 
-# Switch to node user
+# Переключаемся на пользователя node
 USER node
 
-# Set environment variables
+# Указываем переменные окружения
 ENV GENERIC_TIMEZONE=Europe/Moscow \
     TZ=Europe/Moscow
 
-# Command to start n8n
+# Команда для запуска n8n
 CMD ["n8n", "start"]
