@@ -1,9 +1,9 @@
 FROM docker.n8n.io/n8nio/n8n:1.3.1 AS builder
 
-# Переключаемся на root для установки пакетов
+# Switch to root for package installation
 USER root
 
-# Устанавливаем зависимости для компиляции
+# Install build dependencies
 RUN apk update && apk add --no-cache \
     python3 \
     py3-pip \
@@ -12,37 +12,38 @@ RUN apk update && apk add --no-cache \
     musl-dev \
     linux-headers \
     pkgconf \
-    libsndfile \
+    libsndfile-dev \
     ffmpeg \
+    g++ \
     && rm -rf /var/cache/apk/*
 
-# Создаём виртуальную среду
+# Create virtual environment
 RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Обновляем pip
+# Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Устанавливаем Python-библиотеки (без numba)
-RUN pip install --no-cache-dir numpy
-RUN pip install --no-cache-dir scikit-learn
-RUN pip install --no-cache-dir --no-deps librosa
-RUN pip install --no-cache-dir audioread soundfile resampy
+# Install Python packages (without scikit-learn, numba, or llvmlite)
+RUN pip install --no-cache-dir numpy==1.26.4
+RUN pip install --no-cache-dir --no-deps librosa==0.10.2
+RUN pip install --no-cache-dir audioread==3.0.1
+RUN pip install --no-cache-dir soundfile==0.12.1
 
-# Устанавливаем npm-пакеты глобально
+# Install global npm packages
 RUN npm install -g \
     fluent-ffmpeg \
     typescript \
     @qdrant/js-client-rest \
     @langchain/community
 
-# Этап 2: Итоговый минималистичный образ
+# Stage 2: Final minimal image
 FROM docker.n8n.io/n8nio/n8n:1.3.1
 
-# Переключаемся на root для настройки
+# Switch to root for setup
 USER root
 
-# Устанавливаем минимальные runtime-зависимости
+# Install minimal runtime dependencies
 RUN apk update && apk add --no-cache \
     python3 \
     libsndfile \
@@ -50,28 +51,28 @@ RUN apk update && apk add --no-cache \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-# Копируем виртуальную среду
+# Copy virtual environment
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Копируем глобальные npm-пакеты
+# Copy global npm packages
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin/tsc /usr/local/bin/tsc
 
-# Создаём группу docker и добавляем пользователя node
+# Create docker group and add node user
 RUN addgroup -S docker || true \
     && addgroup node docker
 
-# Настраиваем права для папки данных n8n
+# Set permissions for n8n data folder
 RUN chown -R node:node /home/node/.n8n \
     && chmod -R 755 /home/node/.n8n
 
-# Переключаемся на пользователя node
+# Switch to node user
 USER node
 
-# Указываем переменные окружения
+# Set environment variables
 ENV GENERIC_TIMEZONE=Europe/Moscow \
     TZ=Europe/Moscow
 
-# Команда для запуска n8n
+# Command to start n8n
 CMD ["n8n", "start"]
