@@ -4,20 +4,18 @@ FROM docker.n8n.io/n8nio/n8n:latest
 # Переключаемся на root для установки пакетов
 USER root
 
-# Обновляем пакеты и устанавливаем зависимости
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Обновляем пакеты и устанавливаем зависимости (используем apk вместо apt-get)
+RUN apk update && apk add --no-cache \
     ffmpeg \
     python3 \
-    python3-pip \
+    py3-pip \
     curl \
     wget \
     ca-certificates \
-    libva-intel-driver \
     git \
-    build-essential \
+    build-base \
     tzdata \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/cache/apk/*
 
 # Устанавливаем Python-библиотеки
 RUN pip3 install --no-cache-dir \
@@ -32,7 +30,7 @@ RUN npm install -g \
     @langchain/community
 
 # Создаем группу docker, если она не существует, и добавляем пользователя node
-RUN addgroup --system docker || true \
+RUN addgroup -S docker || true \
     && addgroup node docker
 
 # Настраиваем права для папки данных n8n
