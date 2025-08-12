@@ -1,4 +1,14 @@
 {
   "schemaVersion": 2,
-  "dockerfilePath": "./Dockerfile"
+  "dockerfilePath": "./Dockerfile",
+  "volumes": [
+    {
+      "path": "/home/node/.n8n",
+      "hostPath": "/captain/data/n8n-app-data"
+    },
+    {
+      "path": "/files",
+      "hostPath": "/captain/data/n8n-app-files"
+    }
+  ]
 }
